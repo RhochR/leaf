@@ -41,6 +41,10 @@ object SessionStore {
         return Session(baseUrl, role, token)
     }
 
+    suspend fun clear(context: Context) {
+        context.dataStore.edit { it.clear() }
+    }
+
     /** Exakt dieselbe Herleitung wie web/app.js und server.js: sha256(passphrase) als Hex. */
     private fun deriveToken(passphrase: String): String {
         val bytes = passphrase.toByteArray(Charsets.UTF_8)
