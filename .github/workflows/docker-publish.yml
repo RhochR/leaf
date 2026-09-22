@@ -21,6 +21,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      channel:
+        description: "Manuell erneut als Release-Kanal bauen (z. B. um einen bestehenden Release-Tag mit einem Fix neu zu bauen)?"
+        type: choice
+        options: [dev, release]
+        default: dev
 
 jobs:
   build-and-push:
@@ -35,6 +41,14 @@ jobs:
       - name: Repo-Namen in Kleinbuchstaben (GHCR verlangt das)
         run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
+      - name: Release-Modus bestimmen
+        run: |
+          if [ "${{ github.event_name }}" = "release" ] || [ "${{ github.event.inputs.channel }}" = "release" ]; then
+            echo "RELEASE_MODE=true" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_MODE=false" >> "$GITHUB_ENV"
+          fi
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -46,15 +60,25 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=raw,value=dev,enable=${{ github.event_name != 'release' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
-            type=ref,event=tag,enable=${{ github.event_name == 'release' }}
+            type=raw,value=dev,enable=${{ env.RELEASE_MODE == 'false' }}
+            type=raw,value=latest,enable=${{ env.RELEASE_MODE == 'true' }}
+            type=ref,event=tag,enable=${{ env.RELEASE_MODE == 'true' }}
+
+      - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/build-push-action@v6
         with:
           context: .
+          # amd64 für normale PCs/VPS, arm64 für Raspberry Pi & Co. — ohne das baut
+          # buildx nur für die Architektur des GitHub-Runners (amd64), ein Pull auf
+          # ARM-Geräten findet dann kein passendes Manifest ("No such image").
+          platforms: linux/amd64,linux/arm64
+          # Provenance-Attestation abschalten: die hängt dem Manifest-Index sonst einen
+          # zusätzlichen Eintrag mit platform "unknown/unknown" an, den ältere
+          # Docker-Engines (z. B. auf Raspberry Pi OS) beim Pull nicht sauber ignorieren.
+          provenance: false
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
