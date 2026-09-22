@@ -72,8 +72,12 @@ landen in `server/data/db.json` (wird beim ersten Schreiben angelegt, ist in
 
 ### Oder per Docker
 
-Bei jedem Push nach `main` baut [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)
-ein aktuelles Image und veröffentlicht es nach GHCR:
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) veröffentlicht zwei Kanäle nach GHCR:
+
+- **`:latest`** und der jeweilige Versions-Tag (z. B. `:v0.1.0-alpha`) — nur bei einem
+  veröffentlichten [GitHub Release](https://github.com/RhochR/leaf/releases), also der
+  zum tatsächlichen Nutzen gedachte Stand.
+- **`:dev`** — bei jedem Push auf `main`, laufender Stand ohne Stabilitätsgarantie.
 
 ```bash
 docker run -d \

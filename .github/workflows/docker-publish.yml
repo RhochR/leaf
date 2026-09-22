@@ -1,9 +1,13 @@
 name: Docker-Image veröffentlichen
 
-# Baut das server/Dockerfile und pusht es nach ghcr.io — bei jedem Push auf main,
-# der server/, web/, package.json oder das Dockerfile selbst betrifft, plus manuell
-# auslösbar. GHCR-Login läuft über den eingebauten GITHUB_TOKEN, kein eigenes Secret
-# nötig (dafür braucht der Job "packages: write" unten).
+# Zwei Kanäle im selben ghcr.io/rhochr/leaf-Repository, damit "docker pull ...:latest"
+# immer einen echten, benannten Release meint statt irgendeinen main-Zwischenstand:
+#   - jeder Push auf main (der server/, web/, package.json oder das Dockerfile betrifft)
+#     baut NUR den ":dev"-Tag — laufender Stand, keine Stabilitätsgarantie.
+#   - ein veröffentlichtes GitHub Release baut ":latest" + den Release-Tag selbst
+#     (z. B. "v0.1.0-alpha") — das ist der Tag zum tatsächlichen Nutzen/Teilen.
+# GHCR-Login läuft über den eingebauten GITHUB_TOKEN, kein eigenes Secret nötig (dafür
+# braucht der Job "packages: write" unten).
 on:
   push:
     branches: [main]
@@ -14,6 +18,8 @@ on:
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/docker-publish.yml"
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -40,8 +46,9 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=raw,value=latest
-            type=sha,format=short
+            type=raw,value=dev,enable=${{ github.event_name != 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=ref,event=tag,enable=${{ github.event_name == 'release' }}
 
       - uses: docker/setup-buildx-action@v3
 
