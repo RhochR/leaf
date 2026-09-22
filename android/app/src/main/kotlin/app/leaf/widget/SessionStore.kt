@@ -11,24 +11,23 @@ private val Context.dataStore by preferencesDataStore(name = "leaf_session")
 
 private object Keys {
     val BASE_URL = stringPreferencesKey("base_url")
-    val ROOM = stringPreferencesKey("room")
     val ROLE = stringPreferencesKey("role") // "a" oder "b"
     val TOKEN = stringPreferencesKey("token")
 }
 
-data class Session(val baseUrl: String, val room: String, val role: String, val token: String) {
+// Kein "Raum" mehr — ein Server bedient genau ein Paar, ein einziger gemeinsamer Status.
+data class Session(val baseUrl: String, val role: String, val token: String) {
     val partnerRole: String get() = if (role == "a") "b" else "a"
 }
 
-/** Speichert Server-Adresse, Raum, Rolle und den abgeleiteten Token lokal (DataStore).
+/** Speichert Server-Adresse, Rolle und den abgeleiteten Token lokal (DataStore).
     Die Passphrase selbst wird nie gespeichert — nur ihr Hash, wie im Web-Editor auch. */
 object SessionStore {
 
-    suspend fun save(context: Context, baseUrl: String, room: String, role: String, passphrase: String) {
-        val token = deriveToken(passphrase, room)
+    suspend fun save(context: Context, baseUrl: String, role: String, passphrase: String) {
+        val token = deriveToken(passphrase)
         context.dataStore.edit { prefs ->
             prefs[Keys.BASE_URL] = baseUrl.trimEnd('/')
-            prefs[Keys.ROOM] = room
             prefs[Keys.ROLE] = role
             prefs[Keys.TOKEN] = token
         }
@@ -37,15 +36,14 @@ object SessionStore {
     suspend fun load(context: Context): Session? {
         val prefs = context.dataStore.data.first()
         val baseUrl = prefs[Keys.BASE_URL] ?: return null
-        val room = prefs[Keys.ROOM] ?: return null
         val role = prefs[Keys.ROLE] ?: return null
         val token = prefs[Keys.TOKEN] ?: return null
-        return Session(baseUrl, room, role, token)
+        return Session(baseUrl, role, token)
     }
 
-    /** Exakt dieselbe Herleitung wie web/app.js: SHA-256("<passphrase>:<room>") als Hex. */
-    private fun deriveToken(passphrase: String, room: String): String {
-        val bytes = "$passphrase:$room".toByteArray(Charsets.UTF_8)
+    /** Exakt dieselbe Herleitung wie web/app.js und server.js: sha256(passphrase) als Hex. */
+    private fun deriveToken(passphrase: String): String {
+        val bytes = passphrase.toByteArray(Charsets.UTF_8)
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
         return digest.joinToString("") { "%02x".format(it) }
     }

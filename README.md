@@ -2,8 +2,7 @@
 
 > **Hinweis:** Der Code in diesem Repo ist größtenteils KI-generiert (Claude, Anthropic) —
 > entstanden im Gespräch mit mir als eine Art Pair-Programming, inklusive Design, Server,
-> Web-Editor und der Android-App. Einzelheiten und Begründungen zu den Entscheidungen
-> unterwegs stehen in [`docs/PLAN.md`](docs/PLAN.md).
+> Web-Editor und der Android-App.
 
 Eine winzige App für zwei Menschen. Jede:r hat ein Widget auf dem Homescreen, das zeigt,
 was der/die andere gerade macht — eine Nachricht, eine Tätigkeit ("arbeitet", "trainiert",
@@ -21,8 +20,8 @@ aufs Homescreen zu bringen.
 ```
               ┌──────────────────────────┐
               │   Leaf-Server (Node.js)   │
-              │  GET  /api/:room          │  → aktueller Status beider Partner:innen
-              │  PUT  /api/:room/:slot    │  → eigenen Status setzen (mit Token)
+              │  GET  /api/status         │  → aktueller Status beider Partner:innen
+              │  PUT  /api/status/:slot   │  → eigenen Status setzen (mit Token)
               │  liefert die Web-Oberfläche│
               └────────────┬──────────────┘
                             │
@@ -37,14 +36,15 @@ aufs Homescreen zu bringen.
 ```
 
 Beide Seiten sprechen mit derselben schlichten JSON-Schnittstelle. Das Design (Farben,
-Icons, Layout) ist einmal in [`docs/DESIGN.md`](docs/DESIGN.md) festgelegt und wird auf
-jeder Plattform nativ umgesetzt — kein HTML/CSS-Rendering im Widget selbst, sondern echte
-native Oberflächen, die sich schnell und zuverlässig anfühlen.
+Icons, Layout) ist einmal festgelegt und wird auf jeder Plattform nativ umgesetzt — kein
+HTML/CSS-Rendering im Widget selbst, sondern echte native Oberflächen, die sich schnell
+und zuverlässig anfühlen.
 
-**Kein Ende-zu-Ende-verschlüsselt.** Es gibt eine gemeinsame Passphrase, die als
-Schreibschutz dient (nur wer sie kennt, kann Status-Updates posten), aber der Server
-selbst sieht die Inhalte im Klartext. Das war eine bewusste Entscheidung — siehe
-[`docs/PLAN.md`](docs/PLAN.md) für die Abwägung.
+**Ein Server, ein Paar.** Es gibt genau einen gemeinsamen Status (keine "Räume" für
+mehrere Paare) und eine gemeinsame Passphrase, die sowohl zum Lesen als auch zum Schreiben
+nötig ist (`LEAF_PASSPHRASE`, siehe unten). **Nicht Ende-zu-Ende-verschlüsselt** — der
+Server selbst sieht die Inhalte im Klartext, die Passphrase schützt nur vor fremdem
+Zugriff von außen.
 
 ## Projektstruktur
 
@@ -53,24 +53,24 @@ server/     Node.js-Server (Storage + API), keine externen Abhängigkeiten
 web/        Die Editor-Website — hier setzt man seinen eigenen Status
 ios/        Das ScriptWidget-Skript fürs iPhone
 android/    Die eigene kleine Kotlin-Widget-App für Android
-docs/       PLAN.md (Architektur & Entscheidungen), DESIGN.md (visuelle Sprache), SETUP.md
 deploy/     Caddy-Konfiguration & systemd-Service fürs eigene Hosting
 ```
 
 ## Lokal starten
 
-Braucht nur Node.js 22+, sonst nichts:
+Braucht nur Node.js 22+, sonst nichts. Die gemeinsame Passphrase kommt als
+Umgebungsvariable — ohne sie startet der Server bewusst gar nicht:
 
 ```bash
-npm start          # oder: node server/server.js
+LEAF_PASSPHRASE="eure-gemeinsame-passphrase" npm start
 ```
 
 Standardmäßig läuft der Server auf Port 8080, also `http://localhost:8080`. Ein anderer
-Port geht per Umgebungsvariable: `PORT=3000 npm start`. Die Daten landen in
-`server/data/db.json` (wird beim ersten Schreiben angelegt, ist in `.gitignore`).
+Port geht per Umgebungsvariable: `PORT=3000 LEAF_PASSPHRASE=... npm start`. Die Daten
+landen in `server/data/db.json` (wird beim ersten Schreiben angelegt, ist in
+`.gitignore`).
 
 ## Status
 
-Server und Web-Editor (M1) stehen und sind lokal durchgetestet — siehe [`TODO.md`](TODO.md)
-für den genauen Baufortschritt und [`docs/PLAN.md`](docs/PLAN.md) für die vollständige
-Architektur inklusive aller bisherigen Entscheidungen und warum wir sie so getroffen haben.
+Server, Web-Editor und die Android-App stehen, sind lokal durchgetestet und bauen grün
+über GitHub Actions — siehe [`TODO.md`](TODO.md) für den genauen Baufortschritt.

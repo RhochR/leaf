@@ -27,8 +27,8 @@ import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
-/** Einrichtungs-Bildschirm: Server-Adresse, Raum, Passphrase, eigene Rolle — dieselben drei
-    Felder wie im Web-Editor (web/index.html). Wird sowohl beim ersten Start als auch über
+/** Einrichtungs-Bildschirm: Server-Adresse, Passphrase, eigene Rolle — dieselben Felder wie
+    im Web-Editor (web/index.html). Wird sowohl beim ersten Start als auch über
     "Leaf einrichten"-Tap im unkonfigurierten Widget geöffnet. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +56,6 @@ private fun SetupScreen(onSaved: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
     var baseUrl by remember { mutableStateOf("https://") }
-    var room by remember { mutableStateOf("") }
     var passphrase by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("a") }
     var status by remember { mutableStateOf("") }
@@ -67,9 +66,8 @@ private fun SetupScreen(onSaved: () -> Unit) {
     ) {
         Text("🌿 Leaf einrichten", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Zeigt auf deinem Homescreen, was dein Mensch gerade macht. " +
-                "Server-Adresse, Raum und Passphrase bekommst du von der Person, die Leaf " +
-                "für euch aufgesetzt hat.",
+            "Zeigt auf deinem Homescreen, was dein Mensch gerade macht. Server-Adresse und " +
+                "Passphrase bekommst du von der Person, die Leaf für euch aufgesetzt hat.",
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -78,12 +76,6 @@ private fun SetupScreen(onSaved: () -> Unit) {
             onValueChange = { baseUrl = it },
             label = { Text("Server-Adresse") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = room,
-            onValueChange = { room = it },
-            label = { Text("Raum") },
             singleLine = true,
         )
         OutlinedTextField(
@@ -103,7 +95,7 @@ private fun SetupScreen(onSaved: () -> Unit) {
 
         Button(onClick = {
             scope.launch {
-                SessionStore.save(context, baseUrl.trim(), room.trim(), role, passphrase)
+                SessionStore.save(context, baseUrl.trim(), role, passphrase)
                 status = "Gespeichert. Das Widget aktualisiert sich in Kürze."
                 onSaved()
             }

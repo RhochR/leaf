@@ -30,13 +30,16 @@ object LeafApi {
         updatedAt = obj.optLong("updatedAt", 0L),
     )
 
-    /** Holt beide Slots eines Rooms. Gibt null zurück bei 404 oder jedem Netzwerkfehler —
-        der Aufrufer entscheidet dann, ob er den letzten bekannten Stand weiter zeigt. */
-    fun fetchRoom(baseUrl: String, room: String): Pair<Slot, Slot>? {
+    /** Holt beide Slots. Erfordert denselben Bearer-Token wie zum Schreiben — der Server
+        verlangt die Passphrase inzwischen auch zum Lesen. Gibt null zurück bei falscher
+        Passphrase oder jedem Netzwerkfehler; der Aufrufer zeigt dann den letzten bekannten
+        Stand weiter. */
+    fun fetchStatus(baseUrl: String, token: String): Pair<Slot, Slot>? {
         return runCatching {
-            val url = URL("$baseUrl/api/$room")
+            val url = URL("$baseUrl/api/status")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
+            conn.setRequestProperty("Authorization", "Bearer $token")
             conn.connectTimeout = 10_000
             conn.readTimeout = 10_000
             try {

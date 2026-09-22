@@ -23,7 +23,9 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 ## 🖥️ M1 — Server & Web-Editor ✅
 - [x] `server/server.js` — Node, ohne externe Abhängigkeiten
 - [x] Datenbank/Storage (`server/store.js`, JSON-Datei mit atomarem Schreiben)
-- [x] `GET /api/:room` und `PUT /api/:room/:slot` inkl. Token-Auth & Rate-Limit
+- [x] `GET /api/status` und `PUT /api/status/:slot` inkl. Token-Auth & Rate-Limit
+      (inzwischen umgebaut: kein "Raum"-Konzept mehr, ein Server = ein Paar, Passphrase
+      kommt als `LEAF_PASSPHRASE`-Umgebungsvariable — siehe Commit-Historie)
 - [x] `web/` — Editor-Seite: Passphrase, Status-Formular (Nachricht/Tätigkeit/Ort/Theme),
       Presets für Tätigkeit & Ort, Live-Vorschau der eigenen & der Partner-Karte
 - [x] Lokal end-to-end getestet (Node via WSL, da auf dieser Maschine kein Node installiert

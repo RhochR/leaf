@@ -18,14 +18,10 @@
       <p class="tagline">Sag deinem Menschen, was gerade ist.</p>
     </header>
 
-    <!-- Zugangs-Formular: Raum, Passphrase und die eigene Rolle. Wird in localStorage
-         gemerkt, damit man es nicht bei jedem Besuch neu eintippen muss. -->
+    <!-- Zugangs-Formular: Passphrase und die eigene Rolle. Wird in localStorage gemerkt,
+         damit man es nicht bei jedem Besuch neu eintippen muss. -->
     <section id="unlock-section" class="card">
       <form id="unlock-form">
-        <label>
-          Raum
-          <input type="text" id="field-room" name="room" autocomplete="off" required placeholder="z. B. waldweg-12" />
-        </label>
         <label>
           Passphrase
           <input type="password" id="field-passphrase" name="passphrase" autocomplete="off" required />
@@ -46,11 +42,11 @@
       </form>
     </section>
 
-    <!-- Der eigentliche Editor — erst sichtbar, sobald Raum/Passphrase gesetzt sind. -->
+    <!-- Der eigentliche Editor — erst sichtbar, sobald die Passphrase gesetzt ist. -->
     <section id="editor-section" class="card" hidden>
       <div class="editor-header">
         <span id="editor-room-label" class="muted"></span>
-        <button type="button" id="logout-button" class="link-button">Raum wechseln</button>
+        <button type="button" id="logout-button" class="link-button">Abmelden</button>
       </div>
 
       <h2>Dein Status</h2>

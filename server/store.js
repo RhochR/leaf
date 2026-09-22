@@ -1,5 +1,11 @@
 // Speicher für Leaf: eine einzige JSON-Datei statt einer Datenbank.
 //
+// Es gibt genau EINEN Status (zwei Slots, a und b) — keine "Räume" mehr. Dieser Server
+// ist für genau ein Paar gedacht, nicht als Mehrmandanten-Dienst; ein Raum-Konzept hätte
+// nur ein Problem erzeugt, das es sonst gar nicht gäbe (jede:r Fremde hätte sich einen
+// eigenen Raum anlegen können). Die Passphrase kommt jetzt komplett von außen (Server-
+// Konfiguration, siehe server.js) statt "wer zuerst schreibt, legt sie fest".
+//
 // Warum keine SQLite? node:sqlite ist auf Node 22+ dabei, aber je nachdem, welche
 // Node-Version am Ende auf dem Pi/VPS läuft, könnte sie noch hinter einem
 // Experimental-Flag stecken. Für zwei Nutzer:innen mit ein paar Statuszeilen ist eine
@@ -7,18 +13,7 @@
 // null Versions-Abhängigkeiten.
 //
 // Datenform:
-//   {
-//     "rooms": {
-//       "<room>": {
-//         "authHash": "<sha256-hex, doppelt gehasht>",
-//         "createdAt": 1730000000000,
-//         "slots": {
-//           "a": { message, activity, place, theme, reaction, updatedAt },
-//           "b": { ... }
-//         }
-//       }
-//     }
-//   }
+//   { "slots": { "a": { message, activity, place, theme, reaction, updatedAt }, "b": {...} } }
 
 import { readFile, writeFile, rename, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
@@ -46,7 +41,7 @@ export class Store {
       const raw = await readFile(this.filePath, "utf8");
       return JSON.parse(raw);
     } catch (err) {
-      if (err.code === "ENOENT") return { rooms: {} };
+      if (err.code === "ENOENT") return { slots: {} };
       throw err;
     }
   }
@@ -61,7 +56,6 @@ export class Store {
     await rename(tmpPath, this.filePath);
   }
 
-  /** Reiht eine Änderungsfunktion in die Schreib-Warteschlange ein und speichert das Ergebnis. */
   _mutate(fn) {
     const next = this._writeQueue.then(async () => {
       const data = await this._load();
@@ -69,38 +63,25 @@ export class Store {
       await this._save(data);
       return result;
     });
-    // Folgefehler dürfen die Queue nicht verstopfen.
     this._writeQueue = next.catch(() => {});
     return next;
   }
 
-  /** Beide Slots eines Rooms lesen. Gibt null zurück, wenn der Room noch nicht existiert. */
-  async getRoom(room) {
+  /** Beide Slots lesen. */
+  async getStatus() {
     const data = await this._load();
-    const r = data.rooms[room];
-    if (!r) return null;
     return {
-      a: r.slots.a ?? EMPTY_SLOT,
-      b: r.slots.b ?? EMPTY_SLOT,
+      a: data.slots.a ?? EMPTY_SLOT,
+      b: data.slots.b ?? EMPTY_SLOT,
     };
   }
 
-  /**
-   * Schreibt einen Slot. Legt den Room beim allerersten Schreiben an (die Person, die
-   * zuerst mit einer Passphrase in einen neuen Raumnamen schreibt, "gründet" ihn damit).
-   * Wirft { code: "AUTH" }, wenn der Room existiert und der Token nicht passt.
-   */
-  async putSlot(room, slot, authHash, payload) {
+  /** Schreibt einen Slot. Die Passphrase-Prüfung passiert bereits in server.js, bevor das
+      hier aufgerufen wird — der Store selbst kennt gar keine Auth mehr. */
+  async putSlot(slot, payload) {
     return this._mutate((data) => {
-      let r = data.rooms[room];
-      if (!r) {
-        r = { authHash, createdAt: Date.now(), slots: {} };
-        data.rooms[room] = r;
-      } else if (r.authHash !== authHash) {
-        throw Object.assign(new Error("auth mismatch"), { code: "AUTH" });
-      }
-      r.slots[slot] = { ...payload, updatedAt: Date.now() };
-      return r.slots[slot];
+      data.slots[slot] = { ...payload, updatedAt: Date.now() };
+      return data.slots[slot];
     });
   }
 }

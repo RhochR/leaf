@@ -31,14 +31,16 @@ const els = {
   saveStatus: document.getElementById("save-status"),
 };
 
-/** @type {{ room: string, role: "a"|"b", token: string } | null} */
+/** @type {{ role: "a"|"b", token: string } | null} */
 let session = null;
 let selectedTheme = THEMES[0].id;
 let selectedActivity = ACTIVITIES[0].id;
 let selectedPlace = PLACES[0].id;
 let partnerPollTimer = null;
 
-// --- Session (Raum + Rolle + abgeleiteter Token) -----------------------------------
+// --- Session (Rolle + abgeleiteter Token) -------------------------------------------
+// Kein "Raum" mehr — dieser Server ist für genau ein Paar, ein einziger gemeinsamer
+// Status. Die Passphrase ist das einzige Geheimnis.
 
 function loadSession() {
   try {
@@ -57,9 +59,10 @@ function clearSession() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-/** Der Server sieht nie die Passphrase selbst, nur diesen abgeleiteten Token. */
-async function deriveToken(passphrase, room) {
-  const bytes = new TextEncoder().encode(`${passphrase}:${room}`);
+/** Der Server sieht nie die Passphrase selbst, nur diesen abgeleiteten Token — exakt
+    dieselbe Herleitung wie server.js beim Start aus LEAF_PASSPHRASE macht. */
+async function deriveToken(passphrase) {
+  const bytes = new TextEncoder().encode(passphrase);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -253,10 +256,14 @@ function fillFormFromSlot(slot) {
 }
 
 // --- Netzwerk ---------------------------------------------------------------------
+// Beide Endpunkte verlangen jetzt den Bearer-Token — ohne die richtige Passphrase gibt
+// es weder Lesen noch Schreiben.
 
-async function fetchRoom(room) {
-  const res = await fetch(`/api/${encodeURIComponent(room)}`);
-  if (res.status === 404) return null;
+async function fetchStatus() {
+  const res = await fetch("/api/status", {
+    headers: { Authorization: `Bearer ${session.token}` },
+  });
+  if (res.status === 401) return "unauthorized";
   if (!res.ok) throw new Error(`GET fehlgeschlagen (${res.status})`);
   return res.json();
 }
@@ -267,7 +274,7 @@ async function saveSlot() {
   els.saveStatus.textContent = "Speichert …";
   els.saveStatus.classList.remove("ok");
   try {
-    const res = await fetch(`/api/${encodeURIComponent(session.room)}/${session.role}`, {
+    const res = await fetch(`/api/status/${session.role}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -275,8 +282,8 @@ async function saveSlot() {
       },
       body: JSON.stringify(payload),
     });
-    if (res.status === 403) {
-      els.saveStatus.textContent = "Falsche Passphrase für diesen Raum.";
+    if (res.status === 401) {
+      els.saveStatus.textContent = "Falsche Passphrase.";
       return;
     }
     if (!res.ok) throw new Error(`PUT fehlgeschlagen (${res.status})`);
@@ -294,9 +301,9 @@ async function saveSlot() {
 
 async function refreshPartnerPreview() {
   try {
-    const state = await fetchRoom(session.room);
-    const partnerSlot = state ? state[partnerRole(session.role)] : null;
-    renderPreview(els.previewPartner, partnerSlot);
+    const state = await fetchStatus();
+    if (state === "unauthorized") return;
+    renderPreview(els.previewPartner, state[partnerRole(session.role)]);
   } catch (err) {
     console.error(err);
   }
@@ -307,20 +314,24 @@ async function refreshPartnerPreview() {
 async function enterEditor() {
   els.unlockSection.hidden = true;
   els.editorSection.hidden = false;
-  els.editorRoomLabel.textContent = `Raum „${session.room}“ · Person ${session.role.toUpperCase()}`;
+  els.editorRoomLabel.textContent = `Person ${session.role.toUpperCase()}`;
 
   buildPickers();
 
   try {
-    const state = await fetchRoom(session.room);
-    if (state) {
-      fillFormFromSlot(state[session.role]);
-      renderPreview(els.previewSelf, state[session.role]);
-      renderPreview(els.previewPartner, state[partnerRole(session.role)]);
-    } else {
-      renderPreview(els.previewSelf, currentFormSlot());
-      renderPreview(els.previewPartner, null);
+    const state = await fetchStatus();
+    if (state === "unauthorized") {
+      els.unlockError.textContent = "Falsche Passphrase.";
+      els.unlockError.hidden = false;
+      clearSession();
+      session = null;
+      els.editorSection.hidden = true;
+      els.unlockSection.hidden = false;
+      return;
     }
+    fillFormFromSlot(state[session.role]);
+    renderPreview(els.previewSelf, state[session.role]);
+    renderPreview(els.previewPartner, state[partnerRole(session.role)]);
   } catch (err) {
     console.error(err);
     renderPreview(els.previewSelf, currentFormSlot());
@@ -333,13 +344,12 @@ async function enterEditor() {
 els.unlockForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   els.unlockError.hidden = true;
-  const room = document.getElementById("field-room").value.trim();
   const passphrase = document.getElementById("field-passphrase").value;
   const role = els.unlockForm.querySelector('input[name="role"]:checked').value;
-  if (!room || !passphrase) return;
+  if (!passphrase) return;
 
-  const token = await deriveToken(passphrase, room);
-  session = { room, role, token };
+  const token = await deriveToken(passphrase);
+  session = { role, token };
   saveSession(session);
   await enterEditor();
 });

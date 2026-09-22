@@ -1,7 +1,12 @@
 // Leaf-Server: zwei API-Endpunkte + statisches Ausliefern der Editor-Seite (web/).
 // Bewusst ohne externe Abhängigkeiten — nur eingebaute Node-Module. Start:
-//   node server/server.js
+//   LEAF_PASSPHRASE=eure-gemeinsame-passphrase node server/server.js
 // Port per Umgebungsvariable: PORT=8080 node server/server.js (Default 8080).
+//
+// Genau EIN Status-Paar (Slot a + b), keine "Räume" — dieser Server ist für genau ein
+// Paar gedacht. Die Passphrase kommt als Umgebungsvariable von außen (vom Hoster beim
+// Deploy gesetzt), nicht "wer zuerst schreibt, legt sie fest" wie in einer früheren
+// Version — das hätte es Fremden erlaubt, sich einfach selbst zu bedienen.
 
 import { createServer } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
@@ -17,20 +22,32 @@ const DATA_FILE = resolve(ROOT, "server", "data", "db.json");
 const MAX_BODY_BYTES = 2048;
 const MAX_FIELD_LEN = 300;
 
+const PASSPHRASE = process.env.LEAF_PASSPHRASE;
+if (!PASSPHRASE) {
+  console.error(
+    "LEAF_PASSPHRASE ist nicht gesetzt. Server startet nicht ohne eure gemeinsame " +
+      "Passphrase — siehe README.md.",
+  );
+  process.exit(1);
+}
+// Dieselbe Herleitung wie im Client (web/app.js, android SessionStore.kt): sha256(passphrase).
+const EXPECTED_TOKEN_HASH = hashToken(
+  createHash("sha256").update(PASSPHRASE, "utf8").digest("hex"),
+);
+
 const store = new Store(DATA_FILE);
 
-// --- Grobes Rate-Limiting: ein paar Schreibzugriffe pro Minute und Room reichen für
-// zwei Menschen völlig; alles darüber ist eher ein Bug als eine legitime Nutzung.
+// --- Grobes Rate-Limiting: ein paar Schreibzugriffe pro Minute reichen für zwei
+// Menschen völlig; alles darüber ist eher ein Bug als eine legitime Nutzung.
 const WRITE_LIMIT = 8;
 const WRITE_WINDOW_MS = 60_000;
-const writeLog = new Map(); // room -> Zeitstempel-Array
+let writeLog = [];
 
-function isRateLimited(room) {
+function isRateLimited() {
   const now = Date.now();
-  const hits = (writeLog.get(room) || []).filter((t) => now - t < WRITE_WINDOW_MS);
-  hits.push(now);
-  writeLog.set(room, hits);
-  return hits.length > WRITE_LIMIT;
+  writeLog = writeLog.filter((t) => now - t < WRITE_WINDOW_MS);
+  writeLog.push(now);
+  return writeLog.length > WRITE_LIMIT;
 }
 
 // --- Kleine Helfer für Antworten -------------------------------------------------
@@ -83,9 +100,9 @@ async function serveStatic(req, res, pathname) {
 }
 
 // --- Auth: der Client schickt "Authorization: Bearer <token>", wobei <token> selbst
-// schon ein Hash aus Passphrase+Room ist (siehe web/app.js) — der Server sieht die
-// Passphrase nie im Klartext. Gespeichert wird nochmal ein Hash davon, damit selbst ein
-// Leak der Datei nicht direkt den nutzbaren Bearer-Wert preisgibt.
+// schon sha256(passphrase) ist (siehe web/app.js) — der Server sieht die rohe Passphrase
+// nur einmal beim eigenen Start (aus LEAF_PASSPHRASE), nie vom Client. Verglichen wird
+// nochmal gehasht, damit ein Timing-Angriff nicht direkt den nutzbaren Bearer-Wert verrät.
 
 function hashToken(token) {
   return createHash("sha256").update(token, "utf8").digest("hex");
@@ -102,6 +119,13 @@ function extractBearer(req) {
   const header = req.headers["authorization"] || "";
   const match = /^Bearer\s+(.+)$/i.exec(header);
   return match ? match[1].trim() : null;
+}
+
+/** Prüft den Bearer-Token gegen die konfigurierte Passphrase. */
+function checkAuth(req) {
+  const token = extractBearer(req);
+  if (!token) return false;
+  return safeEqual(hashToken(token), EXPECTED_TOKEN_HASH);
 }
 
 // --- Body einlesen, mit Größenlimit ----------------------------------------------
@@ -143,27 +167,27 @@ function sanitizeField(value) {
 }
 
 // --- Routen ------------------------------------------------------------------------
+// Beide Endpunkte verlangen jetzt denselben Bearer-Token — ohne Passphrase gibt es weder
+// Lesen noch Schreiben. Vorher durfte GET ohne Auth lesen, das war die eigentliche Lücke.
 
-async function handleGetRoom(req, res, room) {
-  const state = await store.getRoom(room);
-  if (!state) {
-    sendError(res, 404, "room not found");
+async function handleGetStatus(req, res) {
+  if (!checkAuth(req)) {
+    sendError(res, 401, "missing or wrong passphrase");
     return;
   }
-  sendJson(res, 200, state);
+  sendJson(res, 200, await store.getStatus());
 }
 
-async function handlePutSlot(req, res, room, slot) {
+async function handlePutSlot(req, res, slot) {
   if (slot !== "a" && slot !== "b") {
     sendError(res, 400, "slot must be 'a' or 'b'");
     return;
   }
-  const token = extractBearer(req);
-  if (!token) {
-    sendError(res, 401, "missing bearer token");
+  if (!checkAuth(req)) {
+    sendError(res, 401, "missing or wrong passphrase");
     return;
   }
-  if (isRateLimited(room)) {
+  if (isRateLimited()) {
     sendError(res, 429, "too many writes, slow down");
     return;
   }
@@ -184,16 +208,8 @@ async function handlePutSlot(req, res, room, slot) {
     reaction: sanitizeField(body.reaction),
   };
 
-  try {
-    const saved = await store.putSlot(room, slot, hashToken(token), payload);
-    sendJson(res, 200, saved);
-  } catch (err) {
-    if (err.code === "AUTH") {
-      sendError(res, 403, "wrong passphrase for this room");
-    } else {
-      sendError(res, 500, "internal error");
-    }
-  }
+  const saved = await store.putSlot(slot, payload);
+  sendJson(res, 200, saved);
 }
 
 // --- Server --------------------------------------------------------------------
@@ -213,14 +229,14 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  const apiMatch = /^\/api\/([^/]+)(?:\/([^/]+))?$/.exec(pathname);
-  if (apiMatch) {
-    const [, room, slot] = apiMatch;
+  const statusMatch = /^\/api\/status(?:\/([^/]+))?$/.exec(pathname);
+  if (statusMatch) {
+    const [, slot] = statusMatch;
     try {
       if (req.method === "GET" && !slot) {
-        await handleGetRoom(req, res, room);
+        await handleGetStatus(req, res);
       } else if (req.method === "PUT" && slot) {
-        await handlePutSlot(req, res, room, slot);
+        await handlePutSlot(req, res, slot);
       } else {
         sendError(res, 405, "method not allowed");
       }

@@ -50,10 +50,10 @@ class StatusWidget : GlanceAppWidget() {
             if (session == null) {
                 NotConfiguredContent()
             } else {
-                val rooms = LeafApi.fetchRoom(session.baseUrl, session.room)
+                val status = LeafApi.fetchStatus(session.baseUrl, session.token)
                 val partnerSlot = when (session.role) {
-                    "a" -> rooms?.second
-                    else -> rooms?.first
+                    "a" -> status?.second
+                    else -> status?.first
                 }
                 WidgetContent(partnerSlot)
             }
