@@ -98,7 +98,7 @@ private fun WidgetContent(slot: Slot?) {
         )
         // Derselbe Lese-Schleier wie in web/styles.css (.widget-preview::before) —
         // die einzige zweckgebundene Verlaufsfläche im ganzen Design.
-        Box(modifier = GlanceModifier.fillMaxSize().background(Color(0x55000000)))
+        Box(modifier = GlanceModifier.fillMaxSize().background(Color(0x55000000))) {}
 
         val hasContent = slot != null && (slot.message.isNotEmpty() || slot.activity.isNotEmpty())
         if (!hasContent) {
