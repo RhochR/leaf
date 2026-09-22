@@ -46,9 +46,11 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 - [x] Tap öffnet `MainActivity` (Einrichtung); Widget selbst ist nur Anzeige
 - [x] `.github/workflows/build-apk.yml` — baut eine **Debug-APK** (signiert, installierbar)
       als Artifact bei jedem Push
-- [ ] **Noch nicht kompiliert/getestet** — kein Android SDK auf der Entwicklungsmaschine
-      verfügbar; der erste echte Test ist der GitHub-Actions-Lauf. Details & offene Punkte
-      (Fraunces-Font fehlt noch, kein App-Icon) in `android/README.md`.
+- [x] **Baut erfolgreich über GitHub Actions** (4. Anlauf) — drei echte Fehler unterwegs
+      gefunden und behoben: veraltetes `tools`-Paket in der setup-android-Action, fehlendes
+      Compose-Compiler-Plugin (Pflicht seit Kotlin 2.0), fehlende `content`-Lambda bei einem
+      Glance-`Box()`-Aufruf. APK liegt als Artifact im jeweils neuesten Actions-Lauf.
+      Offene Politur (Fraunces-Font, App-Icon) weiterhin in `android/README.md`.
 - [ ] Auf echtem Gerät installieren & testen
 
 ## 🚀 M4 — Deployment
