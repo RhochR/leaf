@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log*
+.env
+*.local
+
+# Server-Datenbank / lokale Daten
+server/data/
+*.sqlite
+*.sqlite-journal
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
+*.apk
+*.aab
+
+# macOS / Windows Müll
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
