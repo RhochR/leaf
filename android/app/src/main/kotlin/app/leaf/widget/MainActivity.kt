@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.glance.appwidget.updateAll
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,6 +52,18 @@ class MainActivity : ComponentActivity() {
                     LeafApp()
                 }
             }
+        }
+    }
+
+    // onCreate (und damit der Compose-seitige Refresh in StatusScreen unten) läuft nur
+    // beim allerersten Start der Activity. Holt man die App aus dem Hintergrund zurück
+    // (Home-Button, App-Switcher, ohne sie vorher zu beenden), ruft Android nur noch
+    // onResume — deshalb hier zusätzlich und unabhängig vom Compose-Baum, damit "App
+    // öffnen" wirklich JEDES Mal einen Widget-Refresh auslöst, nicht nur beim Kaltstart.
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            StatusWidget().updateAll(applicationContext)
         }
     }
 }
