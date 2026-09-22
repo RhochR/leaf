@@ -39,11 +39,16 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 - [ ] Auf echtem Gerät testen, tatsächliches Update-Intervall beobachten
 
 ## 🤖 M3 — Android-Renderer (eigene Kotlin-App)
-- [ ] Gradle-Projekt-Grundgerüst (`android/`)
-- [ ] Glance-Widget-UI nach `docs/DESIGN.md`
-- [ ] `RefreshWorker` — periodischer Abruf via WorkManager (15 Min)
-- [ ] Tap öffnet die Editor-Website
-- [ ] `.github/workflows/build-apk.yml` — CI baut & veröffentlicht die `.apk`
+- [x] Gradle-Projekt-Grundgerüst (`android/`)
+- [x] Glance-Widget-UI nach `docs/DESIGN.md` (breites + quadratisches Layout,
+      Illustrationen als PNG-Ressourcen aus den SVG-Quellen gerendert)
+- [x] `RefreshWorker` — periodischer Abruf via WorkManager (15 Min)
+- [x] Tap öffnet `MainActivity` (Einrichtung); Widget selbst ist nur Anzeige
+- [x] `.github/workflows/build-apk.yml` — baut eine **Debug-APK** (signiert, installierbar)
+      als Artifact bei jedem Push
+- [ ] **Noch nicht kompiliert/getestet** — kein Android SDK auf der Entwicklungsmaschine
+      verfügbar; der erste echte Test ist der GitHub-Actions-Lauf. Details & offene Punkte
+      (Fraunces-Font fehlt noch, kein App-Icon) in `android/README.md`.
 - [ ] Auf echtem Gerät installieren & testen
 
 ## 🚀 M4 — Deployment

@@ -1,0 +1,40 @@
+name: Android APK bauen
+
+# Läuft bei jedem Push, der android/ betrifft, plus manuell auslösbar.
+# Baut KEINEN eigenen Gradle-Wrapper mit ein (kein gradlew im Repo) — stattdessen
+# installiert gradle/actions/setup-gradle die Gradle-Version selbst, deshalb reicht
+# "gradle assembleRelease" statt "./gradlew assembleRelease".
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", ".github/workflows/build-apk.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: APK bauen
+        working-directory: android
+        # WICHTIG: assembleDebug, nicht assembleRelease — eine Release-APK ohne eigene
+        # Signing-Konfiguration ist unsigniert und lässt sich auf keinem Gerät
+        # installieren. Der Debug-Build wird automatisch mit einem Debug-Schlüssel
+        # signiert, genau das braucht Sideloading für einen privaten Gebrauch wie hier.
+        run: gradle assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leaf-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
