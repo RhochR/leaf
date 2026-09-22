@@ -56,6 +56,8 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 - [ ] Auf echtem Gerät installieren & testen
 
 ## 🚀 M4 — Deployment
+- [x] `Dockerfile` + `.github/workflows/docker-publish.yml` — Image bei jedem Push auf
+      `ghcr.io/rhochr/leaf` veröffentlicht, `server/data` als Volume für Persistenz
 - [ ] `deploy/Caddyfile` — automatisches HTTPS
 - [ ] `deploy/couple-widget.service` — systemd, läuft als eigener Nutzer, nur lokal erreichbar
 - [ ] Auf VPS/Raspberry Pi deployen, mit echter Domain testen

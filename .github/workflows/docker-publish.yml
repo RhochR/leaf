@@ -1,0 +1,53 @@
+name: Docker-Image veröffentlichen
+
+# Baut das server/Dockerfile und pusht es nach ghcr.io — bei jedem Push auf main,
+# der server/, web/, package.json oder das Dockerfile selbst betrifft, plus manuell
+# auslösbar. GHCR-Login läuft über den eingebauten GITHUB_TOKEN, kein eigenes Secret
+# nötig (dafür braucht der Job "packages: write" unten).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "web/**"
+      - "package.json"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/docker-publish.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repo-Namen in Kleinbuchstaben (GHCR verlangt das)
+        run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

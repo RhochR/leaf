@@ -1,0 +1,11 @@
+.git
+.github
+docs
+android
+ios
+deploy
+server/data
+node_modules
+*.md
+.wslconfig
+.gitignore

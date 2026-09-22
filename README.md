@@ -70,6 +70,24 @@ Port geht per Umgebungsvariable: `PORT=3000 LEAF_PASSPHRASE=... npm start`. Die 
 landen in `server/data/db.json` (wird beim ersten Schreiben angelegt, ist in
 `.gitignore`).
 
+### Oder per Docker
+
+Bei jedem Push nach `main` baut [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml)
+ein aktuelles Image und veröffentlicht es nach GHCR:
+
+```bash
+docker run -d \
+  --name leaf \
+  -p 8080:8080 \
+  -e LEAF_PASSPHRASE="eure-gemeinsame-passphrase" \
+  -v leaf-data:/app/server/data \
+  ghcr.io/rhochr/leaf:latest
+```
+
+Das Volume (`-v leaf-data:/app/server/data`) sorgt dafür, dass `db.json` einen
+Container-Neustart übersteht. Läuft auf `http://localhost:8080`, genau wie beim direkten
+`npm start`.
+
 ## Status
 
 Server, Web-Editor und die Android-App stehen, sind lokal durchgetestet und bauen grün
