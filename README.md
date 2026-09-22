@@ -52,8 +52,20 @@ docs/       PLAN.md (Architektur & Entscheidungen), DESIGN.md (visuelle Sprache)
 deploy/     Caddy-Konfiguration & systemd-Service fürs eigene Hosting
 ```
 
+## Lokal starten
+
+Braucht nur Node.js 22+, sonst nichts:
+
+```bash
+npm start          # oder: node server/server.js
+```
+
+Standardmäßig läuft der Server auf Port 8080, also `http://localhost:8080`. Ein anderer
+Port geht per Umgebungsvariable: `PORT=3000 npm start`. Die Daten landen in
+`server/data/db.json` (wird beim ersten Schreiben angelegt, ist in `.gitignore`).
+
 ## Status
 
-Frisch aufgesetzt — siehe [`TODO.md`](TODO.md) für den aktuellen Baufortschritt und
-[`docs/PLAN.md`](docs/PLAN.md) für die vollständige Architektur inklusive aller bisherigen
-Entscheidungen und warum wir sie so getroffen haben.
+Server und Web-Editor (M1) stehen und sind lokal durchgetestet — siehe [`TODO.md`](TODO.md)
+für den genauen Baufortschritt und [`docs/PLAN.md`](docs/PLAN.md) für die vollständige
+Architektur inklusive aller bisherigen Entscheidungen und warum wir sie so getroffen haben.

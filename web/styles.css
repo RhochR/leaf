@@ -1,0 +1,341 @@
+/* Leaf — Editor-Styles. Bildsprache nach docs/DESIGN.md: Fraunces für große Überschriften,
+   Work Sans für UI-Text, flache Flächen, keine Effekte außer dem einen funktionalen
+   Lese-Schleier über den Illustrationen (siehe .widget-preview::before). */
+
+:root {
+  --bg: #eeece5;
+  --surface: #ffffff;
+  --surface-2: #f6f4ee;
+  --border: #e0ddd2;
+  --text: #2b2a26;
+  --text-muted: #726f64;
+  --accent: #2f4a3c;
+  --error: #a3372a;
+  --radius-lg: 20px;
+  --radius: 12px;
+  font-family: "Work Sans", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  margin: 0;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 28px 0 12px;
+  color: var(--text);
+}
+
+.page {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 28px 18px 60px;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.tagline {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  font: inherit;
+  font-size: 16px; /* verhindert Auto-Zoom beim Fokussieren auf iOS */
+  color: var(--text);
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+legend {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 0 0 8px;
+}
+
+.role-picker {
+  display: flex;
+  gap: 16px;
+}
+
+.role-option {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+}
+
+button[type="submit"]:active {
+  transform: scale(0.99);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.error {
+  color: var(--error);
+  font-size: 13px;
+  margin: 10px 0 0;
+}
+
+.save-status {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-height: 1.2em;
+  margin: 10px 0 0;
+}
+
+.save-status.ok {
+  color: var(--accent);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* --- Theme-Auswahl: kleine Kacheln mit der jeweiligen Illustration als Vorschau --- */
+
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.theme-swatch {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-swatch span {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.theme-swatch.selected {
+  border-color: var(--accent);
+}
+
+/* --- Tätigkeit/Ort: Pillen-Auswahl, gleicher Stil wie im Widget selbst --- */
+
+.chip-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.chip svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.custom-input {
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* --- Live-Vorschau: exakt die Widget-Anatomie aus docs/DESIGN.md --- */
+
+.widget-preview {
+  position: relative;
+  height: 160px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.widget-preview::before {
+  /* Der eine funktionale Verlauf im ganzen Design: sorgt dafür, dass weißer Text lesbar
+     bleibt, egal was im Hintergrund gerade zu sehen ist. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 10, 0.42) 0%,
+    rgba(8, 8, 10, 0.08) 42%,
+    rgba(8, 8, 10, 0.32) 100%
+  );
+}
+
+.widget-preview .wp-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 9px;
+  padding: 14px;
+  width: 100%;
+}
+
+.wp-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.wp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.wp-pill svg {
+  width: 11px;
+  height: 11px;
+}
+
+.wp-message {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 20px;
+  line-height: 1.24;
+  color: #fff;
+}
+
+.wp-time {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wp-time svg {
+  width: 12px;
+  height: 12px;
+}
+
+.wp-empty {
+  position: relative;
+  color: var(--text-muted);
+  font-size: 13px;
+}

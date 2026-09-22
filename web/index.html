@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Leaf</title>
+  <link rel="icon" href="data:," />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="brand">
+      <h1>🌿 Leaf</h1>
+      <p class="tagline">Sag deinem Menschen, was gerade ist.</p>
+    </header>
+
+    <!-- Zugangs-Formular: Raum, Passphrase und die eigene Rolle. Wird in localStorage
+         gemerkt, damit man es nicht bei jedem Besuch neu eintippen muss. -->
+    <section id="unlock-section" class="card">
+      <form id="unlock-form">
+        <label>
+          Raum
+          <input type="text" id="field-room" name="room" autocomplete="off" required placeholder="z. B. waldweg-12" />
+        </label>
+        <label>
+          Passphrase
+          <input type="password" id="field-passphrase" name="passphrase" autocomplete="off" required />
+        </label>
+        <fieldset class="role-picker">
+          <legend>Wer bist du?</legend>
+          <label class="role-option">
+            <input type="radio" name="role" value="a" checked />
+            Person A
+          </label>
+          <label class="role-option">
+            <input type="radio" name="role" value="b" />
+            Person B
+          </label>
+        </fieldset>
+        <button type="submit">Weiter</button>
+        <p id="unlock-error" class="error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <!-- Der eigentliche Editor — erst sichtbar, sobald Raum/Passphrase gesetzt sind. -->
+    <section id="editor-section" class="card" hidden>
+      <div class="editor-header">
+        <span id="editor-room-label" class="muted"></span>
+        <button type="button" id="logout-button" class="link-button">Raum wechseln</button>
+      </div>
+
+      <h2>Dein Status</h2>
+      <div id="preview-self" class="widget-preview"></div>
+
+      <form id="status-form">
+        <fieldset>
+          <legend>Theme</legend>
+          <div id="theme-picker" class="theme-picker"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Was machst du?</legend>
+          <div id="activity-picker" class="chip-picker"></div>
+          <input type="text" id="activity-custom" class="custom-input" placeholder="Eigene Tätigkeit …" hidden />
+        </fieldset>
+
+        <fieldset>
+          <legend>Wo bist du?</legend>
+          <div id="place-picker" class="chip-picker"></div>
+          <input type="text" id="place-custom" class="custom-input" placeholder="Eigener Ort …" hidden />
+        </fieldset>
+
+        <label>
+          Nachricht
+          <textarea id="field-message" maxlength="200" rows="2" placeholder="Ein paar Worte für dein Gegenüber …"></textarea>
+        </label>
+
+        <button type="submit" id="save-button">Speichern</button>
+        <p id="save-status" class="save-status" role="status"></p>
+      </form>
+
+      <h2>Was dein Mensch gerade macht</h2>
+      <div id="preview-partner" class="widget-preview"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

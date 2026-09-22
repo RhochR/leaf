@@ -20,13 +20,18 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 - [ ] iOS: ScriptWidget installieren, Test-Skript rendert etwas Einfaches aufs Homescreen
       *(sobald ein iPhone zum Testen verfügbar ist)*
 
-## 🖥️ M1 — Server & Web-Editor
-- [ ] `server/server.js` — Node, ohne externe Abhängigkeiten
-- [ ] Datenbank/Storage (`server/schema.sql` bzw. JSON-Fallback)
-- [ ] `GET /api/:room` und `PUT /api/:room/:slot` inkl. Token-Auth & Rate-Limit
-- [ ] `web/` — Editor-Seite: Passphrase, Status-Formular (Nachricht/Tätigkeit/Ort/Theme),
-      Presets für Tätigkeit & Ort
-- [ ] Lokal end-to-end testen: im Browser posten → per `curl` verifizieren
+## 🖥️ M1 — Server & Web-Editor ✅
+- [x] `server/server.js` — Node, ohne externe Abhängigkeiten
+- [x] Datenbank/Storage (`server/store.js`, JSON-Datei mit atomarem Schreiben)
+- [x] `GET /api/:room` und `PUT /api/:room/:slot` inkl. Token-Auth & Rate-Limit
+- [x] `web/` — Editor-Seite: Passphrase, Status-Formular (Nachricht/Tätigkeit/Ort/Theme),
+      Presets für Tätigkeit & Ort, Live-Vorschau der eigenen & der Partner-Karte
+- [x] Lokal end-to-end getestet (Node via WSL, da auf dieser Maschine kein Node installiert
+      war): statisches Ausliefern, Rundlauf Speichern → Lesen, falscher Token → 403,
+      zu große Anfrage → 413, zwei Browser-Tabs als Person A/B mit Live-Update übers
+      Polling — alles grün. Ein Rendering-Bug unterwegs gefunden & behoben: SVGs
+      brauchen explizite `width`/`height`, sonst berechnet `background-size: cover`
+      falsch (betraf `docs/assets/` und `web/assets/` gleichermaßen).
 
 ## 📱 M2 — iOS-Renderer (ScriptWidget)
 - [ ] `ios/widget.js` schreiben (`fetch()` + JSX-Rendering nach `docs/DESIGN.md`)

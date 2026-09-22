@@ -1,0 +1,13 @@
+{
+  "name": "leaf",
+  "version": "0.1.0",
+  "description": "Eine kleine geteilte Status-Widget-App für zwei Personen.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
