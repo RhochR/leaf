@@ -106,10 +106,16 @@ private fun StatusScreen(session: Session, onReconfigure: () -> Unit) {
         return
     }
 
+    val context = LocalContext.current
     var checking by remember { mutableStateOf(false) }
     var check by remember { mutableStateOf<ConnectionCheck?>(null) }
     val scope = rememberCoroutineScope()
 
+    // Die 15-Minuten-Grenze aus RefreshWorker gilt nur für den automatischen
+    // Hintergrund-Timer (WorkManager-Vorgabe) — ein Refresh, den man selbst im
+    // Vordergrund auslöst, ist davon nicht betroffen. Also bei jedem Öffnen des
+    // Status-Bildschirms (App-Start, Zurück aus dem Editor, "Erneut testen") das
+    // Widget direkt mit aktuellen Daten neu zeichnen, statt auf den Timer zu warten.
     fun runCheck() {
         checking = true
         scope.launch {
@@ -117,6 +123,7 @@ private fun StatusScreen(session: Session, onReconfigure: () -> Unit) {
                 LeafApi.testConnection(session.baseUrl, session.token)
             }
             checking = false
+            StatusWidget().updateAll(context)
         }
     }
 
