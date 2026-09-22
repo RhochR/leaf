@@ -1,5 +1,10 @@
 # 🌿 Leaf
 
+> **Hinweis:** Der Code in diesem Repo ist größtenteils KI-generiert (Claude, Anthropic) —
+> entstanden im Gespräch mit mir als eine Art Pair-Programming, inklusive Design, Server,
+> Web-Editor und der Android-App. Einzelheiten und Begründungen zu den Entscheidungen
+> unterwegs stehen in [`docs/PLAN.md`](docs/PLAN.md).
+
 Eine winzige App für zwei Menschen. Jede:r hat ein Widget auf dem Homescreen, das zeigt,
 was der/die andere gerade macht — eine Nachricht, eine Tätigkeit ("arbeitet", "trainiert",
 "lernt"), ein Ort ("zuhause", "unterwegs") und ein selbstgewähltes Theme. Tippt man aufs
