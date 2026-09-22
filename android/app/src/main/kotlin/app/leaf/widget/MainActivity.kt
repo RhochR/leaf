@@ -35,9 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /** Einziger Einstiegspunkt der App — sowohl beim Start aus dem Launcher als auch beim
@@ -132,9 +130,7 @@ private fun StatusScreen(session: Session, onReconfigure: () -> Unit) {
     fun runCheck() {
         checking = true
         scope.launch {
-            check = withContext(Dispatchers.IO) {
-                LeafApi.testConnection(session.baseUrl, session.token)
-            }
+            check = LeafApi.testConnection(session.baseUrl, session.token)
             checking = false
             StatusWidget().updateAll(context)
         }

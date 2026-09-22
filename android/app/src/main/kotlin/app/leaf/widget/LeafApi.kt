@@ -1,5 +1,7 @@
 package app.leaf.widget
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -42,9 +44,18 @@ object LeafApi {
     /** Holt beide Slots. Erfordert denselben Bearer-Token wie zum Schreiben — der Server
         verlangt die Passphrase inzwischen auch zum Lesen. Gibt null zurück bei falscher
         Passphrase oder jedem Netzwerkfehler; der Aufrufer zeigt dann den letzten bekannten
-        Stand weiter. */
-    fun fetchStatus(baseUrl: String, token: String): Pair<Slot, Slot>? {
-        return runCatching {
+        Stand weiter.
+
+        Suspend + explizit auf Dispatchers.IO, NICHT nur "vom Aufrufer auf einen
+        Hintergrund-Thread zu bringen" überlassen: StatusWidget.provideGlance() ruft das
+        über updateAll() auf, und je nachdem, welcher Coroutine-Dispatcher den Refresh
+        ausgelöst hat (z. B. lifecycleScope.launch in MainActivity.onResume() — der läuft
+        standardmäßig auf dem Hauptthread), würde ein blockierender Call sonst eine
+        NetworkOnMainThreadException werfen, die runCatching() hier stillschweigend zu
+        null verschluckt — das Widget hätte dann NIE echte Daten gezeigt, unabhängig vom
+        Server-Zustand. */
+    suspend fun fetchStatus(baseUrl: String, token: String): Pair<Slot, Slot>? = withContext(Dispatchers.IO) {
+        runCatching {
             val url = URL("$baseUrl/api/status")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
@@ -62,12 +73,11 @@ object LeafApi {
         }.getOrNull()
     }
 
-    /** Blockierender Aufruf — vom Aufrufer auf Dispatchers.IO auszuführen. Anders als
-        fetchStatus() unterscheidet das hier falsche Passphrase von "Server nicht
-        erreichbar", damit MainActivity dem Nutzer sagen kann, woran es liegt. */
-    fun testConnection(baseUrl: String, token: String): ConnectionCheck {
-        if (baseUrl.isBlank()) return ConnectionCheck.Failed("keine Server-Adresse eingetragen")
-        return try {
+    /** Anders als fetchStatus() unterscheidet das hier falsche Passphrase von "Server
+        nicht erreichbar", damit MainActivity dem Nutzer sagen kann, woran es liegt. */
+    suspend fun testConnection(baseUrl: String, token: String): ConnectionCheck = withContext(Dispatchers.IO) {
+        if (baseUrl.isBlank()) return@withContext ConnectionCheck.Failed("keine Server-Adresse eingetragen")
+        try {
             val url = URL("$baseUrl/api/status")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"

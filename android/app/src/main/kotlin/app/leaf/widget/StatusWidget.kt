@@ -46,15 +46,25 @@ class StatusWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val session = SessionStore.load(context)
 
+        // Der Netzwerk-Fetch passiert HIER, vor provideContent — nicht im
+        // Composable-Block selbst. Glance kann den Inhalt einer Widget-Größe wegen
+        // (LocalSize.current, siehe WidgetContent) mehrfach neu komponieren; ein
+        // Seiteneffekt wie ein Netzwerk-Call gehört da nicht rein, das ruft ihn sonst
+        // unnötig mehrfach auf. fetchStatus() ist außerdem bewusst suspend + eigener
+        // Dispatchers.IO-Wechsel (siehe LeafApi.kt) statt hier drauf zu vertrauen, dass
+        // provideGlance schon auf einem Hintergrund-Thread läuft.
+        val status = session?.let { LeafApi.fetchStatus(it.baseUrl, it.token) }
+        val partnerSlot = session?.let {
+            when (it.role) {
+                "a" -> status?.second
+                else -> status?.first
+            }
+        }
+
         provideContent {
             if (session == null) {
                 NotConfiguredContent()
             } else {
-                val status = LeafApi.fetchStatus(session.baseUrl, session.token)
-                val partnerSlot = when (session.role) {
-                    "a" -> status?.second
-                    else -> status?.first
-                }
                 WidgetContent(partnerSlot)
             }
         }
