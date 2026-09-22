@@ -38,7 +38,11 @@ export const ICONS = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.5 6.5l2.5 2.5M15 15l2.5 2.5M17.5 6.5 15 9M9 15l-2.5 2.5"/></svg>',
 };
 
-export function iconFor(activityId) {
-  const a = ACTIVITIES.find((x) => x.id === activityId);
+// Nimmt das LABEL (nicht die id) entgegen — genau das steht in einem gespeicherten Slot
+// (siehe currentFormSlot() in app.js: activity ist der Anzeigetext, keine id). Ein
+// Vergleich gegen x.id hätte hier nie getroffen (Groß/Kleinschreibung + eigene Texte bei
+// "Sonstiges"), jeder Aktivitäts-Pill hätte also immer nur das Spark-Icon gezeigt.
+export function iconFor(activityLabel) {
+  const a = ACTIVITIES.find((x) => x.label === activityLabel);
   return ICONS[a?.icon] || ICONS.spark;
 }

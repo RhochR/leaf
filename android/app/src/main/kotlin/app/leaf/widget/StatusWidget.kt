@@ -25,6 +25,8 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -33,14 +35,15 @@ import androidx.glance.unit.ColorProvider
 
 /**
  * Zeigt den Status der PARTNER-Person (nicht der eigenen) — Anatomie exakt nach
- * docs/DESIGN.md: kleine Pillen für Tätigkeit/Ort, große zentrierte Überschrift für den
- * Inhalt, dezenter Zeitstempel. Zwei Layout-Varianten je nach Widget-Breite (breit vs.
- * quadratisch), analog zu ScriptWidgets Widget-Familien auf iOS.
+ * docs/DESIGN.md: kleine Pillen (mit Icon) für Tätigkeit/Ort, große zentrierte
+ * Überschrift für den Inhalt, dezenter Zeitstempel. Zwei Layout-Varianten je nach
+ * Widget-Breite (breit vs. quadratisch), analog zu ScriptWidgets Widget-Familien auf iOS.
  *
- * Hinweis: Fraunces (die Serif-Schrift aus dem Design) ist hier noch NICHT eingebunden —
- * das braucht eine gebündelte Font-Resource (res/font/fraunces.ttf) und ein FontFamily,
- * was aus Zeitgründen für die erste Version aussteht. Bis dahin nutzt der Text die
- * System-Serif als naher, aber nicht identischer Ersatz.
+ * Hinweis zur Schrift: Fraunces (die Serif-Schrift aus dem Web-Design) lässt sich hier
+ * NICHT einbinden — anders als in LeafTheme.kt (die normale App) unterstützt
+ * Glance/RemoteViews grundsätzlich keine eigenen .ttf-Dateien, nur die eingebauten
+ * Systemschriften (siehe https://issuetracker.google.com/issues/223119081, offen seit
+ * 2022). FontFamily.Serif ist die technisch bestmögliche Annäherung.
  */
 class StatusWidget : GlanceAppWidget() {
 
@@ -128,14 +131,34 @@ private fun WidgetContent(slot: Slot?) {
     }
 }
 
+/** Aktivitäts-Label -> Icon, exakt wie iconFor() in web/presets.js (dort per Bugfix
+    ebenfalls auf Label statt id umgestellt — das ist es, was in einem Slot tatsächlich
+    steht, siehe currentFormSlot() in app.js). Alles Unbekannte (eigene Texte bei
+    "Sonstiges") fällt auf das Spark-Icon zurück. */
+private fun iconForActivity(label: String): Int = when (label) {
+    "Training" -> R.drawable.ic_dumbbell
+    "Arbeit" -> R.drawable.ic_briefcase
+    "Kochen" -> R.drawable.ic_pot
+    "Lesen" -> R.drawable.ic_book
+    else -> R.drawable.ic_spark
+}
+
 @Composable
-private fun Pill(text: String) {
+private fun Pill(icon: Int, text: String) {
     Box(
         modifier = GlanceModifier
             .background(Color(0x24FFFFFF))
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
-        Text(text, style = TextStyle(color = ColorProvider(Color(0xDDFFFFFF)), fontSize = 10.sp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                provider = ImageProvider(icon),
+                contentDescription = null,
+                modifier = GlanceModifier.size(11.dp),
+            )
+            Spacer(GlanceModifier.padding(horizontal = 2.dp))
+            Text(text, style = TextStyle(color = ColorProvider(Color(0xDDFFFFFF)), fontSize = 10.sp))
+        }
     }
 }
 
@@ -146,9 +169,11 @@ private fun WideBody(slot: Slot) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row {
-            if (slot.activity.isNotEmpty()) Pill(slot.activity)
+            if (slot.activity.isNotEmpty()) Pill(iconForActivity(slot.activity), slot.activity)
             if (slot.activity.isNotEmpty() && slot.place.isNotEmpty()) Spacer(GlanceModifier.padding(3.dp))
-            if (slot.place.isNotEmpty()) Pill(slot.place)
+            // Ort bekommt im Web-Design (styles.css/app.js) immer das Pin-Icon, egal
+            // welcher Ort es ist — kein eigenes Icon pro Ort vorgesehen.
+            if (slot.place.isNotEmpty()) Pill(R.drawable.ic_pin, slot.place)
         }
         Spacer(GlanceModifier.padding(5.dp))
         Text(
@@ -157,6 +182,7 @@ private fun WideBody(slot: Slot) {
                 color = ColorProvider(Color.White),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.Serif,
                 textAlign = TextAlign.Center,
             ),
         )
@@ -175,7 +201,7 @@ private fun CompactBody(slot: Slot) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (slot.place.isNotEmpty()) {
-            Pill(slot.place)
+            Pill(R.drawable.ic_pin, slot.place)
             Spacer(GlanceModifier.padding(4.dp))
         }
         Text(
@@ -184,6 +210,7 @@ private fun CompactBody(slot: Slot) {
                 color = ColorProvider(Color.White),
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.Serif,
                 textAlign = TextAlign.Center,
             ),
         )

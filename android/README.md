@@ -7,15 +7,15 @@ Sideloading für den privaten Gebrauch).
 
 ## Ehrlicher Stand
 
-Dieser Code wurde **nicht lokal kompiliert** — auf der Entwicklungsmaschine war kein
-Android SDK verfügbar. Er folgt den dokumentierten Jetpack-Glance/WorkManager-APIs
-sorgfältig, aber der erste GitHub-Actions-Lauf ist der erste echte Kompilier-Test. Schlägt
-er fehl, sind die Fehlermeldungen im Actions-Log meist sehr konkret (falscher Import,
-falscher Parametername) und leicht behebbar — gerne nochmal herschicken.
+Dieser Code wurde nie lokal kompiliert — auf der Entwicklungsmaschine ist kein Android SDK
+verfügbar, jeder Kompilier-Test läuft über GitHub Actions. Läuft mittlerweile durchgehend
+grün. Auf einem echten Gerät getestet: Widget-Refresh, Verbindungstest, eingebetteter
+Status-Editor. Fraunces/Work Sans (`res/font/`) und die Aktivitäts-Icons (`res/drawable/
+ic_*.xml`) sind eingebunden — Details siehe `THIRD_PARTY_NOTICES.md` bzw. die Kommentare
+in `LeafTheme.kt` / `StatusWidget.kt` (Glance kann eigene Schriften technisch nicht laden,
+nur die App selbst).
 
 Offene Punkte für die nächste Runde:
-- **Fraunces-Schrift** ist noch nicht eingebunden (Widget nutzt aktuell die System-Schrift
-  als Übergangslösung) — braucht eine `.ttf`-Datei unter `res/font/`.
 - **App-Icon** fehlt (Manifest verzichtet bewusst auf `android:icon`, damit der Build nicht
   an einer fehlenden Ressource scheitert) — Android zeigt dafür ein Standard-Icon.
 - Tap-to-React aus `docs/PLAN.md`/M5 ist hier noch nicht umgesetzt.
