@@ -22,6 +22,12 @@ jobs:
           java-version: "17"
 
       - uses: android-actions/setup-android@v3
+        with:
+          # Der Standardwert der Action ("tools platform-tools") schlägt fehl: das
+          # eigenständige "tools"-Paket existiert im SDK-Repository nicht mehr
+          # (von Google vor Jahren entfernt, ersetzt durch cmdline-tools). Explizit
+          # nur das anfordern, was wir wirklich brauchen.
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
 
