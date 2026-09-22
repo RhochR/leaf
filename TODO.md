@@ -8,9 +8,11 @@ Fahrplan in Meilensteinen. Details & Begründungen stehen in [`docs/PLAN.md`](do
 - [x] `README.md`, `docs/PLAN.md` geschrieben
 
 ## 🎨 Design-Richtung
-- [ ] Visuelle Richtung mit dir besprechen (Farben, Typografie, Stimmung von "Leaf")
-- [ ] `docs/DESIGN.md` schreiben — die eine Quelle der Wahrheit fürs Aussehen, die beide
-      native Renderer (iOS-Skript & Android-App) umsetzen
+- [x] Visuelle Richtung mit dir besprechen (vier Stimmungen: Morgenrot/Tag/Dämmerung/Nacht,
+      Fraunces-Serif-Überschriften, gestaffelte Landschafts-Illustrationen) — bestätigt im
+      [Design-Artifact](https://claude.ai/artifact/9p4L7FSjBFUC6NRfuGxyFo)
+- [x] `docs/DESIGN.md` geschrieben — die eine Quelle der Wahrheit fürs Aussehen
+- [x] Illustrations-Quelldateien gesichert in `docs/assets/illustrations/`
 
 ## 🧪 M0 — Machbarkeits-Spikes
 - [ ] Android: Minimal-Projekt baut über GitHub Actions zu einer installierbaren `.apk`
