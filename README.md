@@ -15,6 +15,28 @@ Build-Prozess wo es sich vermeiden lässt, und auf beiden Plattformen wird aussc
 Open-Source-Software ohne Werbung oder Bezahlschranken verwendet, um das Widget überhaupt
 aufs Homescreen zu bringen.
 
+## Quick Start
+
+**1. Server starten** (irgendwo, wo beide Partner:innen es erreichen — auch `localhost`
+fürs erste Ausprobieren reicht):
+
+```bash
+docker run -d --name leaf -p 8080:8080 \
+  -e LEAF_PASSPHRASE="eure-gemeinsame-passphrase" \
+  -v leaf-data:/app/server/data \
+  ghcr.io/rhochr/leaf:latest
+```
+
+**2. Status setzen** — `http://<server-adresse>:8080` im Browser öffnen, Passphrase +
+Rolle (Person A/B) eingeben, Nachricht/Tätigkeit/Ort/Theme setzen.
+
+**3. Android-Widget einrichten** — [neueste APK vom aktuellen Release laden](https://github.com/RhochR/leaf/releases/latest),
+installieren (Sideloading erlauben), App öffnen, Server-Adresse + Passphrase + eigene
+Rolle eintragen, dann das Leaf-Widget aufs Homescreen ziehen. Zeigt den Status der
+jeweils *anderen* Person, aktualisiert alle ~15 Min.
+
+**4. iOS** — noch nicht gebaut (kein Testgerät verfügbar), siehe [`TODO.md`](TODO.md), M2.
+
 ## Wie es funktioniert
 
 ```
